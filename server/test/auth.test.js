@@ -2,7 +2,7 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const app = require('../src/app');
-const { registerSchema, loginSchema } = require('../src/validators/auth.validator');
+const { registerSchema, loginSchema, changePasswordSchema } = require('../src/validators/auth.validator');
 const { createReportSchema } = require('../src/validators/report.validator');
 
 describe('Auth & Validation Suite (Member 1)', () => {
@@ -60,6 +60,15 @@ describe('Auth & Validation Suite (Member 1)', () => {
       });
       assert.equal(result.success, true);
     });
+
+    test('rejects short new password in changePasswordSchema', () => {
+      const result = changePasswordSchema.safeParse({
+        currentPassword: 'oldpassword',
+        newPassword: '123',
+      });
+      assert.equal(result.success, false);
+      assert.match(result.error.errors[0].message, /at least 6 characters/i);
+    });
   });
 
   describe('REST Endpoints Security & Health Checks', () => {
@@ -80,6 +89,16 @@ describe('Auth & Validation Suite (Member 1)', () => {
       const res = await request(app).get('/api/users/me');
       assert.equal(res.status, 401);
       assert.match(res.body.error, /Authentication required/i);
+    });
+
+    test('PATCH /api/users/me/password returns 401 when unauthenticated', async () => {
+      const res = await request(app)
+        .patch('/api/users/me/password')
+        .send({
+          currentPassword: 'any',
+          newPassword: 'newpassword123',
+        });
+      assert.equal(res.status, 401);
     });
 
     test('POST /api/reports returns 401 when unauthenticated', async () => {
@@ -107,4 +126,3 @@ describe('Auth & Validation Suite (Member 1)', () => {
     });
   });
 });
-
