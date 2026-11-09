@@ -53,6 +53,32 @@ describe('Database Integration & End-to-End Test (Milestone Zero)', () => {
     assert.ok(created, 'Newly created report should be in reports list');
   });
 
+  test('rejects password change with incorrect current password', async () => {
+    const res = await agent.patch('/api/users/me/password').send({
+      currentPassword: 'WrongPassword!',
+      newPassword: 'NewPassword123!',
+    });
+    assert.equal(res.status, 400);
+    assert.match(res.body.error, /Current password is incorrect/i);
+  });
+
+  test('successfully updates password and verifies login with new password', async () => {
+    // 1. Change password to NewPassword123!
+    const changeRes = await agent.patch('/api/users/me/password').send({
+      currentPassword: 'Password123!',
+      newPassword: 'NewPassword123!',
+    });
+    assert.equal(changeRes.status, 200);
+    assert.match(changeRes.body.message, /Password updated successfully/i);
+
+    // 2. Change it back to original Password123! so seed credentials stay intact for team
+    const revertRes = await agent.patch('/api/users/me/password').send({
+      currentPassword: 'NewPassword123!',
+      newPassword: 'Password123!',
+    });
+    assert.equal(revertRes.status, 200);
+  });
+
   test('logs out successfully and destroys session', async () => {
     const res = await agent.post('/api/auth/logout');
     assert.equal(res.status, 200);
@@ -62,4 +88,3 @@ describe('Database Integration & End-to-End Test (Milestone Zero)', () => {
     assert.equal(meRes.body.user, null);
   });
 });
-

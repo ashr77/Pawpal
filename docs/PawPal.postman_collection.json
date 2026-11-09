@@ -1,0 +1,124 @@
+{
+  "info": {
+    "name": "PawPal API Collection",
+    "description": "PawPal REST API Postman Collection for Internet Programming Lab (CSE-4113)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@pawpal.com\",\n  \"password\": \"Password123!\",\n  \"phone\": \"01700000099\",\n  \"area\": \"Dhanmondi, Dhaka\"\n}"
+            },
+            "url": "http://localhost:5000/api/auth/register"
+          }
+        },
+        {
+          "name": "Log In",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"demo@pawpal.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "http://localhost:5000/api/auth/login"
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/auth/me"
+          }
+        },
+        {
+          "name": "Log Out",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/users/me"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo User Updated\",\n  \"phone\": \"01799999999\",\n  \"area\": \"Banani, Dhaka\"\n}"
+            },
+            "url": "http://localhost:5000/api/users/me"
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": "http://localhost:5000/api/users/me/password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rescue Reports",
+      "item": [
+        {
+          "name": "Get All Reports",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/reports"
+          }
+        },
+        {
+          "name": "Create Report",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"report_type\": \"Injured\",\n  \"animal_type\": \"Cat\",\n  \"urgency\": \"Critical\",\n  \"location\": \"Dhanmondi Lake, Road 8A\",\n  \"description\": \"Injured stray cat needing immediate treatment\",\n  \"animal_condition\": \"Limping left paw\",\n  \"contact_information\": \"01700000001\"\n}"
+            },
+            "url": "http://localhost:5000/api/reports"
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/health"
+          }
+        }
+      ]
+    }
+  ]
+}
