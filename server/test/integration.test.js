@@ -62,3 +62,4 @@ describe('Database Integration & End-to-End Test (Milestone Zero)', () => {
     assert.equal(meRes.body.user, null);
   });
 });
+

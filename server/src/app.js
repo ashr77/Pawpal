@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
@@ -9,11 +10,16 @@ const { pool } = require('./config/db');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const reportRoutes = require('./routes/report.routes');
+const uploadRoutes = require('./routes/upload.routes');
 
 const app = express();
 
 // Security and middleware
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 app.use(
   cors({
     origin: 'http://localhost:5173',
@@ -22,6 +28,9 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // PostgreSQL-backed Session
 app.use(
@@ -53,6 +62,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -70,4 +80,3 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
-

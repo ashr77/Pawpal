@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../services/api';
@@ -6,6 +6,7 @@ import { apiRequest } from '../services/api';
 export default function CreateReportPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     report_type: 'Injured',
@@ -18,11 +19,35 @@ export default function CreateReportPage() {
     image_url: '',
   });
 
+  const [uploadMode, setUploadMode] = useState('file'); // 'file' or 'url'
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [statusText, setStatusText] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handle local file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Selected image exceeds the 5MB size limit.');
+        return;
+      }
+      setError('');
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleClearFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async (e) => {
@@ -31,15 +56,46 @@ export default function CreateReportPage() {
     setSubmitting(true);
 
     try {
+      let finalImageUrl = formData.image_url;
+
+      // 1. If user selected a local file, upload it first to /api/upload
+      if (uploadMode === 'file' && selectedFile) {
+        setStatusText('Uploading animal photograph...');
+        const uploadData = new FormData();
+        uploadData.append('image', selectedFile);
+
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadData,
+          credentials: 'include',
+        });
+
+        const uploadJson = await uploadRes.json();
+        if (!uploadRes.ok) {
+          throw new Error(uploadJson.error || 'Failed to upload image');
+        }
+
+        finalImageUrl = uploadJson.imageUrl;
+      }
+
+      // 2. Submit rescue report with image URL
+      setStatusText('Publishing rescue report...');
+      const payload = {
+        ...formData,
+        image_url: finalImageUrl,
+      };
+
       const data = await apiRequest('/api/reports', {
         method: 'POST',
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
+
       navigate(`/reports/${data.report.id}`);
     } catch (err) {
       setError(err.message || 'Failed to submit report. Please review required fields.');
     } finally {
       setSubmitting(false);
+      setStatusText('');
     }
   };
 
@@ -50,7 +106,7 @@ export default function CreateReportPage() {
           <div className="border-bottom pb-3 mb-4">
             <h2 className="fw-bold text-danger mb-1">🚨 Report an Animal in Need</h2>
             <p className="text-muted small mb-0">
-              Provide as much detail as possible to help nearby volunteers coordinate rescue and treatment.
+              Provide accurate details and photos to help nearby volunteers coordinate rescue and medical care.
             </p>
           </div>
 
@@ -142,37 +198,106 @@ export default function CreateReportPage() {
               ></textarea>
             </div>
 
-            <div className="row g-3 mb-4">
-              <div className="col-md-6">
-                <label className="form-label fw-semibold">Contact Info for Coordination *</label>
-                <input
-                  type="text"
-                  name="contact_information"
-                  required
-                  className="form-control"
-                  placeholder="Phone number or contact channel"
-                  value={formData.contact_information}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label fw-semibold">Image URL (Optional)</label>
-                <input
-                  type="url"
-                  name="image_url"
-                  className="form-control"
-                  placeholder="https://example.com/photo.jpg"
-                  value={formData.image_url}
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="mb-4">
+              <label className="form-label fw-semibold">Contact Info for Coordination *</label>
+              <input
+                type="text"
+                name="contact_information"
+                required
+                className="form-control"
+                placeholder="Phone number or contact channel"
+                value={formData.contact_information}
+                onChange={handleChange}
+              />
             </div>
 
-            <div className="d-flex justify-content-end gap-2">
+            {/* Direct Image Upload / URL Section */}
+            <div className="card bg-light border p-3 mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <label className="form-label fw-bold mb-0">📸 Animal Photograph</label>
+                <div className="btn-group btn-group-sm">
+                  <button
+                    type="button"
+                    className={`btn ${uploadMode === 'file' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setUploadMode('file')}
+                  >
+                    📁 Upload from Device
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${uploadMode === 'url' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setUploadMode('url')}
+                  >
+                    🔗 Image Link
+                  </button>
+                </div>
+              </div>
+
+              {uploadMode === 'file' ? (
+                <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/png, image/jpeg, image/webp, image/gif"
+                    className="form-control mb-2"
+                    onChange={handleFileChange}
+                  />
+                  <div className="text-muted small">
+                    Supported formats: JPG, PNG, WEBP, GIF (Max 5MB)
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <input
+                    type="url"
+                    name="image_url"
+                    className="form-control mb-2"
+                    placeholder="https://example.com/photo.jpg"
+                    value={formData.image_url}
+                    onChange={(e) => {
+                      handleChange(e);
+                      setPreviewUrl(e.target.value);
+                    }}
+                  />
+                  <div className="text-muted small">Paste a direct web link to the photograph</div>
+                </div>
+              )}
+
+              {/* Instant Live Preview */}
+              {previewUrl && (
+                <div className="mt-3 text-center position-relative">
+                  <div className="small fw-semibold text-muted mb-1">Image Preview:</div>
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="img-thumbnail rounded shadow-sm"
+                    style={{ maxHeight: '200px', objectFit: 'cover' }}
+                    onError={() => setPreviewUrl('')}
+                  />
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={handleClearFile}
+                    >
+                      Remove Image
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="d-flex justify-content-end align-items-center gap-3">
+              {submitting && (
+                <span className="text-muted small fw-semibold">
+                  <span className="spinner-border spinner-border-sm me-2 text-danger"></span>
+                  {statusText || 'Processing...'}
+                </span>
+              )}
               <button
                 type="button"
                 className="btn btn-outline-secondary"
+                disabled={submitting}
                 onClick={() => navigate('/reports')}
               >
                 Cancel
@@ -182,7 +307,7 @@ export default function CreateReportPage() {
                 disabled={submitting}
                 className="btn btn-danger fw-bold px-4"
               >
-                {submitting ? 'Publishing Report...' : 'Publish Report'}
+                {submitting ? 'Submitting...' : 'Publish Report'}
               </button>
             </div>
           </form>

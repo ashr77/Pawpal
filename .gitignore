@@ -4,5 +4,6 @@ dist/
 .env.local
 coverage/
 uploads/
+server/uploads/*
+!server/uploads/.gitkeep
 .DS_Store
-
