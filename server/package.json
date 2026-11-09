@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "db:migrate": "node -r dotenv/config ./node_modules/.bin/node-pg-migrate -m ../database/migrations up",
-    "db:migrate:down": "node -r dotenv/config ./node_modules/.bin/node-pg-migrate -m ../database/migrations down",
-    "db:migrate:create": "node -r dotenv/config ./node_modules/.bin/node-pg-migrate -m ../database/migrations create",
+    "db:migrate": "node-pg-migrate -m ../database/migrations up",
+    "db:migrate:down": "node-pg-migrate -m ../database/migrations down",
+    "db:migrate:create": "node-pg-migrate -m ../database/migrations create",
     "db:seed": "node -r dotenv/config src/config/seed.js",
     "test": "node --test test/*.test.js"
   },
