@@ -9,3 +9,4 @@ router.get('/me', requireAuth, userController.getProfile);
 router.patch('/me', requireAuth, validate(profileUpdateSchema), userController.updateProfile);
 
 module.exports = router;
+

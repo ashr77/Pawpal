@@ -55,3 +55,4 @@ module.exports = {
   getProfile,
   updateProfile,
 };
+
