@@ -277,3 +277,251 @@
   "timestamp": "2026-11-09T05:25:44.815Z"
 }
 ```
+
+---
+
+## 6. Phase 2: Rescue Management & Progress Timeline
+
+### 6.1 List Reports (with Search, Filters & Urgency Priority)
+* **Method:** `GET`
+* **Endpoint:** `/reports`
+* **Access:** Public
+* **Query Parameters:**
+  * `search`: Keyword string (searches location, description, condition, animal type)
+  * `area`: Location / neighborhood substring
+  * `animal_type`: Animal category (`Cat`, `Dog`, `Bird`, `Other`)
+  * `report_type`: Report category (`Injured`, `Abandoned`, `Stray`, `Lost`, `Found`)
+  * `urgency`: Priority filter (`Critical`, `Urgent`, `Normal`)
+  * `status`: State filter (`Active`, `In Progress`, `Resolved`)
+  * `sort`: `emergency` (default, sorts Critical > Urgent > Normal, then newest) or `newest`
+* **Success Response (200 OK):**
+```json
+{
+  "reports": [
+    {
+      "id": "7d634137-...",
+      "reporter_id": "3050c9e7-...",
+      "reporter_name": "Demo User",
+      "report_type": "Injured",
+      "animal_type": "Cat",
+      "image_url": "/uploads/img-1700000.jpg",
+      "location": "Road 8A, Dhanmondi, Dhaka",
+      "description": "Found a young stray cat with an injured front leg...",
+      "animal_condition": "Limping and unable to walk properly",
+      "contact_information": "01700000001",
+      "urgency": "Critical",
+      "status": "Active",
+      "verification_status": "Verified",
+      "offers_count": 2,
+      "updates_count": 3,
+      "created_at": "2026-11-09T...",
+      "updated_at": "2026-11-09T..."
+    }
+  ]
+}
+```
+
+### 6.2 Update Rescue Case Status
+* **Method:** `PATCH`
+* **Endpoint:** `/reports/:id/status`
+* **Access:** Authenticated (`requireAuth` — reporter or admin)
+* **Request Body:**
+```json
+{
+  "status": "In Progress"
+}
+```
+* **Success Response (200 OK):**
+```json
+{
+  "message": "Rescue status updated to In Progress",
+  "report": { ... }
+}
+```
+
+### 6.3 Edit Rescue Report
+* **Method:** `PATCH`
+* **Endpoint:** `/reports/:id`
+* **Access:** Authenticated (`requireAuth` — reporter or admin)
+* **Request Body:** Any subset of `report_type`, `animal_type`, `location`, `description`, `animal_condition`, `contact_information`, `urgency`, `image_url`
+* **Success Response (200 OK):**
+```json
+{
+  "message": "Rescue report updated successfully",
+  "report": { ... }
+}
+```
+
+### 6.4 Add Progress Timeline Update
+* **Method:** `POST`
+* **Endpoint:** `/reports/:id/updates`
+* **Access:** Authenticated (`requireAuth` — reporter or admin)
+* **Request Body:**
+```json
+{
+  "event_type": "Taken to Veterinarian",
+  "description": "Transported safely to Central Vet Hospital for surgery."
+}
+```
+* **Success Response (201 Created):**
+```json
+{
+  "message": "Rescue progress update added successfully",
+  "update": {
+    "id": "e81d77a2-...",
+    "report_id": "7d634137-...",
+    "author_id": "3050c9e7-...",
+    "author_name": "Demo User",
+    "event_type": "Taken to Veterinarian",
+    "description": "Transported safely to Central Vet Hospital for surgery.",
+    "created_at": "2026-11-23T..."
+  }
+}
+```
+
+### 6.5 Get Chronological Timeline Updates
+* **Method:** `GET`
+* **Endpoint:** `/reports/:id/updates`
+* **Access:** Public
+* **Success Response (200 OK):**
+```json
+{
+  "updates": [
+    {
+      "id": "11111111-...",
+      "event_type": "Reported",
+      "description": "Rescue report submitted to PawPal.",
+      "author_name": "Demo User",
+      "created_at": "2026-11-23T..."
+    }
+  ]
+}
+```
+
+---
+
+## 7. Phase 2: Volunteer Coordination & Dashboard
+
+### 7.1 Submit Assistance Offer
+* **Method:** `POST`
+* **Endpoint:** `/reports/:id/offers`
+* **Access:** Authenticated (`requireAuth` — non-reporter)
+* **Request Body:**
+```json
+{
+  "help_type": "Transportation",
+  "message": "I have an SUV with a crate and can transport the animal to any vet clinic in Dhanmondi."
+}
+```
+* **Validation Rules:**
+  * `help_type` must be one of: `Rescue`, `Transportation`, `Temporary Shelter`, `Veterinary Help`, `Financial Help`.
+  * Cannot volunteer on your own report.
+  * Cannot submit assistance offers for `Resolved` rescue cases.
+* **Success Response (201 Created):**
+```json
+{
+  "message": "Assistance offer submitted successfully",
+  "offer": {
+    "id": "f29b47e1-...",
+    "report_id": "7d634137-...",
+    "volunteer_id": "c1f7b7f4-...",
+    "help_type": "Transportation",
+    "message": "I have an SUV...",
+    "status": "Pending",
+    "created_at": "2026-11-23T..."
+  }
+}
+```
+
+### 7.2 Get Received Assistance Offers (Confidential)
+* **Method:** `GET`
+* **Endpoint:** `/reports/:id/offers`
+* **Access:** Authenticated (`requireAuth` — report author or admin only)
+* **Security Note:** Non-owners receive `403 Forbidden` to protect volunteer personal contact details.
+* **Success Response (200 OK):**
+```json
+{
+  "offers": [
+    {
+      "id": "f29b47e1-...",
+      "volunteer_id": "c1f7b7f4-...",
+      "volunteer_name": "Jane Volunteer",
+      "volunteer_email": "jane@pawpal.com",
+      "volunteer_phone": "01700000003",
+      "volunteer_area": "Gulshan, Dhaka",
+      "help_type": "Transportation",
+      "message": "I have an SUV...",
+      "status": "Pending",
+      "created_at": "2026-11-23T..."
+    }
+  ]
+}
+```
+
+### 7.3 Update Assistance Offer Status
+* **Method:** `PATCH`
+* **Endpoint:** `/reports/:id/offers/:offerId/status`
+* **Access:** Authenticated (`requireAuth` — report author or admin)
+* **Request Body:**
+```json
+{
+  "status": "Accepted"
+}
+```
+* **Success Response (200 OK):**
+```json
+{
+  "message": "Offer status updated to Accepted",
+  "offer": { ... }
+}
+```
+
+### 7.4 Get User's Own Submitted Reports
+* **Method:** `GET`
+* **Endpoint:** `/users/me/reports`
+* **Access:** Authenticated (`requireAuth`)
+* **Success Response (200 OK):**
+```json
+{
+  "reports": [
+    {
+      "id": "7d634137-...",
+      "animal_type": "Cat",
+      "report_type": "Injured",
+      "location": "Road 8A, Dhanmondi, Dhaka",
+      "urgency": "Critical",
+      "status": "Active",
+      "offers_count": 2,
+      "updates_count": 3,
+      "created_at": "2026-11-09T..."
+    }
+  ]
+}
+```
+
+### 7.5 Get User's Own Volunteering Activity
+* **Method:** `GET`
+* **Endpoint:** `/users/me/offers`
+* **Access:** Authenticated (`requireAuth`)
+* **Success Response (200 OK):**
+```json
+{
+  "offers": [
+    {
+      "id": "f29b47e1-...",
+      "report_id": "7d634137-...",
+      "help_type": "Transportation",
+      "message": "I have an SUV...",
+      "offer_status": "Accepted",
+      "animal_type": "Cat",
+      "report_type": "Injured",
+      "location": "Road 8A, Dhanmondi, Dhaka",
+      "urgency": "Critical",
+      "report_status": "In Progress",
+      "reporter_name": "Demo User",
+      "reporter_phone": "01700000001",
+      "created_at": "2026-11-23T..."
+    }
+  ]
+}
+```

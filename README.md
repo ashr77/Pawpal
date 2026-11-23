@@ -32,12 +32,17 @@ flowchart TD
 
 ---
 
-## 🗄️ Database Entity-Relationship Diagram (Phase 1)
+## 🗄️ Database Entity-Relationship Diagram (Phase 1 & Phase 2)
 
 ```mermaid
 erDiagram
     USERS ||--o{ RESCUE_REPORTS : "submits"
+    USERS ||--o{ RESCUE_UPDATES : "logs"
+    USERS ||--o{ HELP_OFFERS : "volunteers"
     USERS ||--o{ SESSION : "maintains"
+
+    RESCUE_REPORTS ||--o{ RESCUE_UPDATES : "tracks"
+    RESCUE_REPORTS ||--o{ HELP_OFFERS : "receives"
 
     USERS {
         uuid id PK
@@ -66,6 +71,25 @@ erDiagram
         string verification_status
         timestamptz created_at
         timestamptz updated_at
+    }
+
+    RESCUE_UPDATES {
+        uuid id PK
+        uuid report_id FK
+        uuid author_id FK
+        string event_type
+        text description
+        timestamptz created_at
+    }
+
+    HELP_OFFERS {
+        uuid id PK
+        uuid report_id FK
+        uuid volunteer_id FK
+        string help_type
+        text message
+        string status
+        timestamptz created_at
     }
 
     SESSION {
@@ -129,11 +153,11 @@ npm run dev
 ---
 
 ## 🧪 Testing Suite
-Execute the automated test suite (Unit, Validation, Database Integration, and File Upload):
+Execute the automated test suite (Unit, Validation, Database Integration, File Upload, Search & Filters, Timeline, and Volunteer Coordination):
 ```powershell
 npm test
 ```
-*All 21 automated tests run in parallel against your local environment.*
+*All 40 automated tests run across your local environment covering Phase 1 and Phase 2.*
 
 ---
 
