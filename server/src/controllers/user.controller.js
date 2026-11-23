@@ -85,8 +85,81 @@ async function changePassword(req, res, next) {
   }
 }
 
+/**
+ * Retrieve user's own submitted rescue reports (GET /api/users/me/reports)
+ */
+async function getMyReports(req, res, next) {
+  try {
+    const userId = req.session.user.id;
+    const query = `
+      SELECT 
+        r.id,
+        r.reporter_id,
+        r.report_type,
+        r.animal_type,
+        r.image_url,
+        r.location,
+        r.description,
+        r.animal_condition,
+        r.contact_information,
+        r.urgency,
+        r.status,
+        r.verification_status,
+        r.created_at,
+        r.updated_at,
+        (SELECT COUNT(*)::int FROM help_offers h WHERE h.report_id = r.id) AS offers_count,
+        (SELECT COUNT(*)::int FROM rescue_updates u WHERE u.report_id = r.id) AS updates_count
+      FROM rescue_reports r
+      WHERE r.reporter_id = $1
+      ORDER BY r.created_at DESC;
+    `;
+    const result = await db.query(query, [userId]);
+    return res.json({ reports: result.rows });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Retrieve user's own volunteering activity (GET /api/users/me/offers)
+ */
+async function getMyOffers(req, res, next) {
+  try {
+    const userId = req.session.user.id;
+    const query = `
+      SELECT 
+        h.id,
+        h.report_id,
+        h.volunteer_id,
+        h.help_type,
+        h.message,
+        h.status AS offer_status,
+        h.created_at,
+        r.animal_type,
+        r.report_type,
+        r.location,
+        r.urgency,
+        r.status AS report_status,
+        r.image_url,
+        u.name AS reporter_name,
+        u.phone AS reporter_phone
+      FROM help_offers h
+      JOIN rescue_reports r ON h.report_id = r.id
+      JOIN users u ON r.reporter_id = u.id
+      WHERE h.volunteer_id = $1
+      ORDER BY h.created_at DESC;
+    `;
+    const result = await db.query(query, [userId]);
+    return res.json({ offers: result.rows });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getProfile,
   updateProfile,
   changePassword,
+  getMyReports,
+  getMyOffers,
 };

@@ -10,7 +10,7 @@
     "db:migrate:down": "node-pg-migrate -m ../database/migrations down",
     "db:migrate:create": "node-pg-migrate -m ../database/migrations create",
     "db:seed": "node -r dotenv/config src/config/seed.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -22,6 +22,7 @@
     "helmet": "^8.0.0",
     "multer": "^2.5.0",
     "node-pg-migrate": "^7.9.1",
+    "pawpal": "file:..",
     "pg": "^8.13.3",
     "zod": "^3.24.2"
   },
