@@ -11,6 +11,8 @@ import ProfilePage from './pages/ProfilePage';
 import CreateReportPage from './pages/CreateReportPage';
 import ReportsListPage from './pages/ReportsListPage';
 import ReportDetailPage from './pages/ReportDetailPage';
+import MyReportsPage from './pages/MyReportsPage';
+import MyOffersPage from './pages/MyOffersPage';
 
 export default function App() {
   return (
@@ -30,6 +32,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <CreateReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-reports"
+            element={
+              <ProtectedRoute>
+                <MyReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-volunteering"
+            element={
+              <ProtectedRoute>
+                <MyOffersPage />
               </ProtectedRoute>
             }
           />

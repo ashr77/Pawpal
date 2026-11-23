@@ -8,5 +8,7 @@ const { profileUpdateSchema, changePasswordSchema } = require('../validators/aut
 router.get('/me', requireAuth, userController.getProfile);
 router.patch('/me', requireAuth, validate(profileUpdateSchema), userController.updateProfile);
 router.patch('/me/password', requireAuth, validate(changePasswordSchema), userController.changePassword);
+router.get('/me/reports', requireAuth, userController.getMyReports);
+router.get('/me/offers', requireAuth, userController.getMyOffers);
 
 module.exports = router;

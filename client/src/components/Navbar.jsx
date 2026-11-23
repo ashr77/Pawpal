@@ -41,11 +41,23 @@ export default function Navbar() {
               </Link>
             </li>
             {user && (
-              <li className="nav-item">
-                <Link className="nav-link text-warning fw-semibold" to="/reports/new">
-                  + Report Animal
-                </Link>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/my-reports">
+                    My Reports
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/my-volunteering">
+                    My Volunteering
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link text-warning fw-semibold" to="/reports/new">
+                    🚨 + Report Animal
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
 
